@@ -2,10 +2,24 @@ import streamlit as st
 from transformers import ViTForImageClassification, ViTFeatureExtractor
 from PIL import Image
 import requests
+import torch
+from transformers import ViTForImageClassification, ViTFeatureExtractor
 
-# Load the pre-trained model and feature extractor
-model = ViTForImageClassification.from_pretrained("nickmuchi/vit-finetuned-chest-xray-pneumonia")
-feature_extractor = ViTFeatureExtractor.from_pretrained("nickmuchi/vit-finetuned-chest-xray-pneumonia")
+# Load the saved models
+checkpoint = torch.load('vit_model.pth', map_location='cpu')
+model_config = checkpoint['config']
+
+# Initialize the models
+model = ViTForImageClassification(model_config)
+feature_extractor = ViTFeatureExtractor(model_config)
+
+# Load the state dictionaries
+model.load_state_dict(checkpoint['model_state_dict'])
+feature_extractor.load_state_dict(checkpoint['feature_extractor_state_dict'])
+
+# Set the models to evaluation mode
+model.eval()
+feature_extractor.eval()
 
 # Define class labels
 class_labels = ['Normal', 'Pneumonia']
