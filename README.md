@@ -13,6 +13,10 @@ Chest X-ray images are crucial for diagnosing various respiratory diseases, incl
 - **Pneumonia Detection**: Trains a deep learning model for pneumonia detection using the augmented dataset.
 - **Web Application**: Provides a Streamlit-based web application for users to upload chest X-ray images and receive predictions on pneumonia diagnosis.
 
+ ## Pre-trained Model
+
+The project utilizes a pre-trained Vision Transformer (ViT) model that has been fine-tuned on the Chest X-ray Pneumonia dataset. The model was initially pre-trained on the ImageNet 1K dataset and then customized to classify normal or pneumonia images.
+
 ## Installation
 
 To run the project locally, follow these steps:
