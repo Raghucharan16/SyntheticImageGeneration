@@ -1,58 +1,64 @@
 import streamlit as st
-from transformers import ViTForImageClassification, ViTFeatureExtractor
-from PIL import Image
-import requests
 import torch
-from transformers import ViTForImageClassification, ViTFeatureExtractor
+from PIL import Image
+from torchvision.transforms import functional as F
+from transformers import ViTForImageClassification
 
-# Load the saved models
-checkpoint = torch.load('vit_model.pth', map_location='cpu')
-model_config = checkpoint['config']
+# Load the model from the local .pth file
+model_path = "chest_xray_pneumonia_detection.pth"
 
-# Initialize the models
-model = ViTForImageClassification(model_config)
-feature_extractor = ViTFeatureExtractor(model_config)
+# Load model directly
+from transformers import AutoImageProcessor, AutoModelForImageClassification
 
-# Load the state dictionaries
-model.load_state_dict(checkpoint['model_state_dict'])
-feature_extractor.load_state_dict(checkpoint['feature_extractor_state_dict'])
+processor = AutoImageProcessor.from_pretrained("dima806/chest_xray_pneumonia_detection")
+model = AutoModelForImageClassification.from_pretrained("dima806/chest_xray_pneumonia_detection")
 
-# Set the models to evaluation mode
-model.eval()
-feature_extractor.eval()
+model_state_dict = torch.load(model_path, map_location=torch.device('cpu'))  # Load the model state dictionary
+# model = ViTForImageClassification(num_labels=2)  # Initialize the model
+model.load_state_dict(model_state_dict)  # Load the state dictionary into the model
 
-# Define class labels
-class_labels = ['Normal', 'Pneumonia']
+# Set device to GPU if available
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model.to(device)
 
-# Function to make predictions
+# Define label names
+class_names = ["NORMAL", "PNEUMONIA"]
+
+# Define prediction function
 def predict(image):
-    # Ensure image has three dimensions
-    if image.mode != "RGB":
-        image = image.convert("RGB")
+    # Preprocess image
+    image = F.resize(image, (224, 224))
+    image = F.to_tensor(image)
+    image = F.normalize(image, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    image = image.unsqueeze(0).to(device)
 
-    # Preprocess the image
-    inputs = feature_extractor(images=image, return_tensors="pt")
-    
-    # Make prediction
-    outputs = model(**inputs)
-    predicted_class = class_labels[outputs.logits.argmax().item()]
-    return predicted_class
+    # Perform inference
+    with torch.no_grad():
+        outputs = model(image)
+        predicted_class = torch.argmax(outputs.logits, dim=1).item()
 
-# Main function
+    return class_names[predicted_class]
+
+# Streamlit app
 def main():
-    st.title("Synthetic Image Generation  using GAN's and Chest X-ray Pneumonia Detection")
+    st.title("Chest X-ray Pneumonia Detection")
+    st.sidebar.title("About")
+
+    st.sidebar.info(
+        "This app detects pneumonia in chest X-ray images using a pre-trained deep learning model."
+    )
 
     # Upload image
-    uploaded_file = st.file_uploader("Upload Chest X-ray Image", type=['jpg', 'jpeg', 'png'])
+    uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
 
     if uploaded_file is not None:
-        # Display the uploaded image
-        image = Image.open(uploaded_file)
-        st.image(image, caption='Uploaded Image', use_column_width=True)
+        # Display uploaded image
+        image = Image.open(uploaded_file).convert('RGB')
+        st.image(image, caption="Uploaded Image", use_column_width=True)
 
-        # Make prediction
-        result = predict(image)
-        st.write('Prediction:', result)
+        # Perform prediction
+        prediction = predict(image)
+        st.write(f"Prediction: {prediction}")
 
 if __name__ == "__main__":
     main()
