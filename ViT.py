@@ -1,17 +1,8 @@
-from transformers import ViTForImageClassification, ViTFeatureExtractor
 import torch
+from transformers import AutoModelForImageClassification, AutoTokenizer
 
-# Load the pre-trained models
-model = ViTForImageClassification.from_pretrained("nickmuchi/vit-finetuned-chest-xray-pneumonia")
-feature_extractor = ViTFeatureExtractor.from_pretrained("nickmuchi/vit-finetuned-chest-xray-pneumonia")
+# Load the pre-trained model
+model = AutoModelForImageClassification.from_pretrained("dima806/chest_xray_pneumonia_detection")
 
-# Convert the models to PyTorch format
-pytorch_model = model.to(torch.device('cpu'))
-pytorch_feature_extractor = feature_extractor.to(torch.device('cpu'))
-
-# Save the models as a .pth file
-torch.save({
-    'model_state_dict': pytorch_model.state_dict(),
-    'feature_extractor_state_dict': pytorch_feature_extractor.state_dict(),
-    'config': model.config
-}, 'vit_model.pth')
+# Save the model's state dictionary
+torch.save(model.state_dict(), "chest_xray_pneumonia_detection.pth")
