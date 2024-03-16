@@ -1,0 +1,13 @@
+tensorflow
+numpy
+matplotlib
+google-colab
+opencv-python
+IPython
+scikit-image
+ipykernel
+torch
+torchvision
+streamlit
+transformers
+Pillow
