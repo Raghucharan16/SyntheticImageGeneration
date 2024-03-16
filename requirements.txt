@@ -1,7 +1,6 @@
 tensorflow==2.15
 numpy
 matplotlib
-google-colab
 opencv-python
 IPython
 scikit-image
